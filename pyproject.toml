@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yt2mp3"
+version = "1.0.0"
+description = "Download and convert YouTube audio to MP3/WAV for content you are authorized to download."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "yt2mp3 contributors" }]
+dependencies = [
+    "yt-dlp>=2024.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+]
+
+[project.scripts]
+yt2mp3 = "yt2mp3.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["yt2mp3*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
