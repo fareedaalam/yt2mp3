@@ -9,6 +9,7 @@
   const downloadBtn = document.getElementById("download-btn");
   const status = document.getElementById("status");
   const statusText = document.getElementById("status-text");
+  const progressBar = document.getElementById("progress-bar");
   const errorBox = document.getElementById("error");
 
   let infoDebounce = null;
@@ -33,12 +34,23 @@
     status.hidden = true;
   }
 
+  function setProgressInProgress() {
+    progressBar.classList.add("indeterminate");
+    progressBar.classList.remove("complete");
+  }
+
+  function setProgressComplete() {
+    progressBar.classList.remove("indeterminate");
+    progressBar.classList.add("complete");
+  }
+
   async function fetchInfo() {
     const url = urlInput.value.trim();
     if (!url || url === lastFetchedUrl) return;
 
     clearError();
     videoInfo.hidden = true;
+    setProgressInProgress();
     setStatus("Fetching video information...");
 
     try {
@@ -91,7 +103,6 @@
 
     clearError();
     downloadBtn.disabled = true;
-    setStatus("Downloading audio...");
 
     const payload = {
       url,
@@ -102,13 +113,27 @@
       end: endInput.value.trim() || null,
     };
 
+    const isClip = Boolean(payload.start || payload.end);
+    const baseMessage = isClip
+      ? "Downloading requested clip and converting"
+      : "Downloading full audio and converting (longer videos take longer)";
+
+    const startedAt = Date.now();
+    setProgressInProgress();
+    setStatus(`${baseMessage}...`);
+    const tick = setInterval(() => {
+      const elapsed = Math.round((Date.now() - startedAt) / 1000);
+      setStatus(`${baseMessage}... (${elapsed}s)`);
+    }, 1000);
+
     try {
-      setStatus("Converting audio...");
       const res = await fetch("/api/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      clearInterval(tick);
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -131,8 +156,10 @@
       link.remove();
       URL.revokeObjectURL(link.href);
 
+      setProgressComplete();
       setStatus("Completed");
     } catch (err) {
+      clearInterval(tick);
       hideStatus();
       showError("Unable to download this video. The video may be unavailable or restricted.");
     } finally {

@@ -9,6 +9,7 @@
   --accent-hover: #b8241a;
   --error-bg: #fef2f1;
   --error-text: #a4231a;
+  --success: #1a9c5c;
   --radius: 10px;
 }
 
@@ -176,6 +177,11 @@ button:disabled {
 .progress-bar.indeterminate {
   width: 40%;
   animation: indeterminate 1.1s infinite ease-in-out;
+}
+
+.progress-bar.complete {
+  width: 100%;
+  background: var(--success);
 }
 
 @keyframes indeterminate {

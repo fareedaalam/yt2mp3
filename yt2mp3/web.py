@@ -9,6 +9,7 @@ business logic lives here.
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import webbrowser
 from pathlib import Path
@@ -25,6 +26,17 @@ from .timestamps import format_timestamp, parse_timestamp, validate_range
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
 DEFAULT_OUTPUT_DIR = "./downloads"
+
+# Fallback ffmpeg/ffprobe binaries bundled with the repo, used only if the
+# system doesn't already have ffmpeg on PATH (e.g. no global install yet).
+_BUNDLED_FFMPEG_DIR = Path(__file__).resolve().parent.parent / ".local-bin"
+
+
+def _ensure_ffmpeg_on_path() -> None:
+    if shutil.which("ffmpeg") and shutil.which("ffprobe"):
+        return
+    if (_BUNDLED_FFMPEG_DIR / "ffmpeg").exists():
+        os.environ["PATH"] = f"{_BUNDLED_FFMPEG_DIR}{os.pathsep}{os.environ.get('PATH', '')}"
 
 # Friendly quality presets -> the existing 0-10 libmp3lame VBR scale
 # (0 = highest quality). Kept out of the browser UI on purpose.
@@ -93,19 +105,23 @@ def create_app(output_dir: Optional[str] = None) -> Flask:
 
             temp_dir = make_temp_dir()
             try:
-                source_path, info = download_best_audio(url, temp_dir)
+                source_path, info = download_best_audio(url, temp_dir, start=start, end=end)
 
                 output_dir: Path = app.config["OUTPUT_DIR"]
                 filename = build_filename(info.title, output_format, start, end)
                 output_path = resolve_unique_path(output_dir, filename)
+
+                # download_best_audio already trimmed to [start, end] when a
+                # range was requested, so the source is already the exact clip.
+                trimmed_by_download = start is not None or end is not None
 
                 convert(
                     source_path,
                     output_path,
                     output_format=output_format,
                     video_info=info,
-                    start=start,
-                    end=end,
+                    start=None if trimmed_by_download else start,
+                    end=None if trimmed_by_download else end,
                     quality=quality,
                     bitrate=resolved_bitrate if output_format == "mp3" else None,
                 )
@@ -147,6 +163,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    _ensure_ffmpeg_on_path()
     args = build_arg_parser().parse_args()
     app = create_app(output_dir=args.output)
 

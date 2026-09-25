@@ -213,7 +213,8 @@ def run(argv: Optional[list[str]] = None) -> int:
             bar = ProgressBar("")
             hook = _make_download_progress_hook(bar)
             source_path, info = download_best_audio(
-                args.url, temp_dir, progress_callback=hook, verbose=args.verbose
+                args.url, temp_dir, progress_callback=hook, verbose=args.verbose,
+                start=start, end=end,
             )
             _print()
 
@@ -221,14 +222,18 @@ def run(argv: Optional[list[str]] = None) -> int:
             filename = build_filename(info.title, args.format, start, end)
             output_path = resolve_unique_path(output_dir, filename)
 
+            # download_best_audio already trimmed to [start, end] when a range
+            # was requested, so the source is already the exact clip here.
+            trimmed_by_download = start is not None or end is not None
+
             _print(f"Converting to {args.format.upper()}...")
             convert(
                 source_path,
                 output_path,
                 output_format=args.format,
                 video_info=info,
-                start=start,
-                end=end,
+                start=None if trimmed_by_download else start,
+                end=None if trimmed_by_download else end,
                 quality=args.quality,
                 bitrate=args.bitrate,
                 sample_rate=args.sample_rate,

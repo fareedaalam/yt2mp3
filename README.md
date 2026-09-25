@@ -16,6 +16,7 @@ browser via a lightweight local web UI, or from the command line.
 - Downloads the best available audio stream via [yt-dlp](https://github.com/yt-dlp/yt-dlp)
 - Converts it to **MP3** (VBR quality or explicit bitrate) or **WAV** (PCM) using FFmpeg
 - Trims to a precise `--start`/`--end` time range, or downloads the full audio
+- When trimming, downloads only the requested time range (not the whole video) for speed
 - Names the output file after the video title (sanitized, collision-safe)
 - Embeds metadata (title/artist/album/track) and cover art on MP3 output
 - Shows progress and clear, non-crashy error messages
@@ -323,3 +324,8 @@ authorized to download (your own uploads, explicitly licensed content,
 public-domain content, etc.). You are responsible for complying with
 YouTube's Terms of Service and applicable copyright law in your
 jurisdiction. Do not use this tool to infringe on others' copyrights.
+
+# Run it from root dir
+```bash
+source .venv/bin/activate && yt2mp3-web
+```

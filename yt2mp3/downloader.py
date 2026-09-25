@@ -120,20 +120,29 @@ def _video_info_from_dict(info: dict) -> VideoInfo:
     )
 
 
+_NO_END_TRIM_SENTINEL = 1e9  # "to the end of the video"
+
+
 def download_best_audio(
     url: str,
     dest_dir: Path,
     progress_callback: Optional[ProgressCallback] = None,
     verbose: bool = False,
+    start: Optional[float] = None,
+    end: Optional[float] = None,
 ) -> tuple[Path, VideoInfo]:
     """Download the best available audio-only stream for `url` into
-    `dest_dir`, without any post-processing/re-encoding.
+    `dest_dir`, without any further post-processing/re-encoding.
+
+    When `start`/`end` are given, only that time range is fetched (via
+    yt-dlp's section-download support) instead of the full audio stream,
+    which avoids downloading the whole video just to keep a short clip
+    of it. yt-dlp performs the cut with ffmpeg to within a few
+    milliseconds of the requested boundaries, which is accurate enough
+    for audio trimming; the caller should treat the returned file as
+    already trimmed and not trim it again.
 
     Returns the path to the downloaded file and the parsed VideoInfo.
-    Trimming and format conversion are handled separately (see audio.py)
-    so that we always start from the highest quality source stream and
-    perform exact, ffmpeg-driven trimming rather than relying solely on
-    yt-dlp's keyframe-based section seeking.
     """
     validate_url(url)
     dest_dir = Path(dest_dir)
@@ -153,6 +162,14 @@ def download_best_audio(
         "retries": 3,
         "fragment_retries": 3,
     }
+
+    if start is not None or end is not None:
+        range_start = start if start is not None else 0.0
+        range_end = end if end is not None else _NO_END_TRIM_SENTINEL
+        ydl_opts["download_ranges"] = yt_dlp.utils.download_range_func(
+            None, [(range_start, range_end)]
+        )
+        ydl_opts["force_keyframes_at_cuts"] = True
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
