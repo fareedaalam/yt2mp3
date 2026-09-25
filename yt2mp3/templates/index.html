@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>yt2mp3</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="card">
+    <header>
+      <h1>yt2mp3</h1>
+      <p class="subtitle">YouTube Audio Downloader</p>
+    </header>
+
+    <label for="url">YouTube URL</label>
+    <input id="url" type="text" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+
+    <section id="video-info" class="video-info" hidden>
+      <img id="thumbnail" alt="Video thumbnail">
+      <div>
+        <div id="title" class="video-title"></div>
+        <div id="uploader" class="video-meta"></div>
+        <div id="duration" class="video-meta"></div>
+      </div>
+    </section>
+
+    <div class="row">
+      <div class="field">
+        <label for="format">Format</label>
+        <select id="format">
+          <option value="mp3" selected>MP3</option>
+          <option value="wav">WAV</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="quality">Quality</label>
+        <select id="quality">
+          <option value="best" selected>Best</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="bitrate">Bitrate</label>
+        <select id="bitrate">
+          <option value="auto" selected>Auto</option>
+          <option value="128k">128K</option>
+          <option value="192k">192K</option>
+          <option value="256k">256K</option>
+          <option value="320k">320K</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="start">Start</label>
+        <input id="start" type="text" placeholder="00:00">
+      </div>
+      <div class="field">
+        <label for="end">End</label>
+        <input id="end" type="text" placeholder="End of video">
+      </div>
+    </div>
+
+    <button id="download-btn" type="button">Download Audio</button>
+
+    <section id="status" class="status" hidden>
+      <div id="status-text">Ready</div>
+      <div class="progress"><div id="progress-bar" class="progress-bar indeterminate"></div></div>
+    </section>
+
+    <p id="error" class="error" hidden></p>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

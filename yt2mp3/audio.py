@@ -145,9 +145,13 @@ def convert(
         cmd += ["-ss", f"{start:.3f}"]
     cmd += ["-i", str(source_path)]
 
+    # Output-side duration limit. Must come after ALL -i inputs (not just
+    # the audio one): an option placed between two -i flags binds to the
+    # following input rather than the output, so placing -t here would
+    # silently attach to the thumbnail image input instead of trimming.
+    duration_args: list[str] = []
     if end is not None:
-        duration = end - (start or 0.0)
-        cmd += ["-t", f"{duration:.3f}"]
+        duration_args = ["-t", f"{end - (start or 0.0):.3f}"]
 
     map_args = ["-map", "0:a"]
 
@@ -180,6 +184,7 @@ def convert(
     if output_format == "mp3":
         cmd += _metadata_args(video_info)
 
+    cmd += duration_args
     cmd += [str(output_path)]
 
     try:

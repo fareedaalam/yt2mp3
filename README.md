@@ -1,7 +1,8 @@
 # yt2mp3
 
-A cross-platform command-line tool that downloads a YouTube video's audio
-and converts it to MP3 or WAV, with optional time-range trimming.
+A cross-platform tool that downloads a YouTube video's audio and converts
+it to MP3 or WAV, with optional time-range trimming. Use it from your
+browser via a lightweight local web UI, or from the command line.
 
 > **Use responsibly.** Only download content you own, that is licensed for
 > download, or that you otherwise have the right to download (e.g. under
@@ -36,7 +37,7 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e .
 ```
 
-This installs the `yt2mp3` command into your environment.
+This installs the `yt2mp3` and `yt2mp3-web` commands into your environment.
 
 ### FFmpeg installation
 
@@ -74,7 +75,49 @@ ffprobe -version
 `yt2mp3` checks for `ffmpeg`/`ffprobe` at startup and prints these exact
 instructions if either is missing, instead of crashing.
 
-## Usage
+## Usage (Web UI)
+
+Start the web server:
+
+```bash
+yt2mp3-web
+```
+
+```text
+yt2mp3 web server running at:
+  http://127.0.0.1:8000
+```
+
+Your browser opens automatically (pass `--no-browser` to skip that). From
+there:
+
+1. Paste a YouTube URL — the title, channel, duration, and thumbnail are
+   fetched and shown automatically.
+2. Choose **Format** (MP3/WAV), **Quality** (Best/High/Medium), **Bitrate**
+   (Auto or a fixed MP3 bitrate), and an optional **Start**/**End** time
+   range.
+3. Click **Download Audio**. The converted file is saved to the server's
+   downloads directory and offered to your browser as a direct download.
+
+### Options
+
+| Flag              | Meaning                                                  |
+| ----------------- | --------------------------------------------------------- |
+| `--host`          | Host to bind (default `127.0.0.1`)                        |
+| `--port`          | Port to bind (default `8000`)                              |
+| `--output`        | Directory to save downloaded files (default `./downloads`) |
+| `--no-browser`    | Don't open a browser window automatically                  |
+
+```bash
+yt2mp3-web --port 5000 --output ~/Music/yt2mp3
+```
+
+Equivalent to `python -m yt2mp3.web`.
+
+## Usage (CLI, advanced)
+
+The command-line interface remains available and uses the exact same
+downloader/converter logic as the web UI.
 
 ```bash
 yt2mp3 <youtube-url> [options]
@@ -233,23 +276,35 @@ yt2mp3/
 ├── yt2mp3/
 │   ├── __init__.py
 │   ├── __main__.py
-│   ├── cli.py          # argument parsing, orchestration, progress, exit codes
-│   ├── downloader.py    # yt-dlp integration (URL validation, info, download)
-│   ├── audio.py          # FFmpeg conversion, trimming, metadata, dependency checks
-│   ├── timestamps.py     # timestamp parsing/validation/formatting
-│   ├── filenames.py      # title -> safe, unique filename
-│   └── exceptions.py     # typed errors -> exit codes
+│   ├── cli.py             # CLI interface: argument parsing, orchestration, progress, exit codes
+│   ├── web.py              # Web UI interface: Flask app, routes, orchestration
+│   ├── downloader.py       # core: yt-dlp integration (URL validation, info, download)
+│   ├── audio.py             # core: FFmpeg conversion, trimming, metadata, dependency checks
+│   ├── timestamps.py        # core: timestamp parsing/validation/formatting
+│   ├── filenames.py         # core: title -> safe, unique filename
+│   ├── exceptions.py        # typed errors -> exit codes / HTTP status
+│   ├── templates/
+│   │   └── index.html
+│   └── static/
+│       ├── style.css
+│       └── app.js
 │
 ├── tests/
 │   ├── test_timestamps.py
 │   ├── test_filenames.py
-│   └── test_cli.py
+│   ├── test_cli.py
+│   └── test_web.py
 │
+├── downloads/
 ├── requirements.txt
 ├── pyproject.toml
 ├── README.md
 └── .gitignore
 ```
+
+Both `cli.py` and `web.py` are thin interfaces over the same core modules
+(`downloader.py`, `audio.py`, `timestamps.py`, `filenames.py`) — neither
+contains its own download/conversion logic.
 
 ## Development / testing
 

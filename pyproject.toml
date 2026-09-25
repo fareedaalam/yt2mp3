@@ -12,6 +12,7 @@ license = { text = "MIT" }
 authors = [{ name = "yt2mp3 contributors" }]
 dependencies = [
     "yt-dlp>=2024.1.0",
+    "flask>=3.0",
 ]
 
 [project.optional-dependencies]
@@ -21,9 +22,13 @@ dev = [
 
 [project.scripts]
 yt2mp3 = "yt2mp3.cli:main"
+yt2mp3-web = "yt2mp3.web:main"
 
 [tool.setuptools.packages.find]
 include = ["yt2mp3*"]
+
+[tool.setuptools.package-data]
+yt2mp3 = ["templates/*.html", "static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
